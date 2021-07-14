@@ -22,6 +22,28 @@ function ProfileSideBar(props) {
   )
 }
 
+function ProfileRelationsBox(props) {
+  return (
+    <ProfileRelationsBoxWrapper>
+    <h2 className="smallTitle">
+      {props.title} ({props.items.length})
+    </h2>
+    <ul>
+      {/* {followers.map((actualItem) => {
+        return (
+          <li key={actualItem}>
+            <a href={`/users/${actualItem.title}`}>
+              <img src={actualItem.image} />
+              <span>{actualItem.title}</span>
+            </a>
+          </li>
+        )
+      })} */}
+    </ul>
+    </ProfileRelationsBoxWrapper>
+  )
+}
+
 export default function Home() {
   const RandomUser = 'LoboNeves';
   const [communities, setCommunities] = React.useState([{
@@ -30,6 +52,18 @@ export default function Home() {
     image: 'https://alurakut.vercel.app/capa-comunidade-01.jpg'
   }]);
   const favorites = ['jardeson777', 'luucasfreitas', 'matheusromaneli']
+
+  const [followers, setFollowers] = React.useState([]);
+  // Pegar o array de dados do github
+  React.useEffect(function() {
+    fetch('https://api.github.com/users/peas/followers')
+    .then(function (serverResponse) {
+      return serverResponse.json();
+    })
+    .then(function (completeResponse) {
+      setFollowers(completeResponse);
+    }) 
+  }, [])
 
   return (
     <>
@@ -83,7 +117,8 @@ export default function Home() {
             </form>
           </Box>
         </div>
-        <div className = "profileRelationsArea" style={{ gridArea: "profileRelationsArea" }}>
+        <div className = "profileRelationsArea" style={{ gridArea: "profileRelationsArea" }}>          
+          <ProfileRelationsBox title="Seguidores" items={followers} />
           <ProfileRelationsBoxWrapper>
             <h2 className="smallTitle">
               Comunidades ({communities.length})
