@@ -46,11 +46,7 @@ function ProfileRelationsBox(props) {
 
 export default function Home() {
   const RandomUser = 'LoboNeves';
-  const [communities, setCommunities] = React.useState([{
-    id: '123456789',
-    title: 'Eu odeio acordar cedo',
-    image: 'https://alurakut.vercel.app/capa-comunidade-01.jpg'
-  }]);
+  const [communities, setCommunities] = React.useState([]);
   const favorites = ['jardeson777', 'luucasfreitas', 'matheusromaneli']
 
   const [followers, setFollowers] = React.useState([]);
@@ -63,6 +59,31 @@ export default function Home() {
     .then(function (completeResponse) {
       setFollowers(completeResponse);
     }) 
+
+    //API GraphQL
+    fetch('https://graphql.datocms.com/', {
+      method: 'POST',
+      headers: {
+        'Authorization': '1e176e73c61fe608cb3c64c81bf4d3',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({ "query": `query {
+        allCommunities {
+          id 
+          title
+          imageUrl
+          creatorSlug
+        }
+      }` })
+    })
+    .then((response) => response.json()) //Pega o retorno do response.json() e já retorna
+    .then((completeResponse) => {
+      const communitiesComeFromDato = completeResponse.data.allCommunities;
+      console.log(communitiesComeFromDato)
+      setCommunities(communitiesComeFromDato)
+    })
+
   }, [])
 
   return (
@@ -85,16 +106,30 @@ export default function Home() {
             <h2 className="subTitle">O que você deseja fazer ?</h2>
             <form onSubmit={function handleCriaComunidade(e) {
               e.preventDefault();
-              const FormData = new FormData(e.target);
+              const dadosdoForm = new FormData(e.target);
 
               const community = {
-                id: new Date().toISOString(),
-                title: FormData.get('title'),
-                image: FormData.get('image'),
+                title: dadosdoForm.get('title'),
+                imageUrl: dadosdoForm.get('image'),
+                creatorSlug: RandomUser,
               }
 
-              const updatedCommunities = [...communities, 'Alura Stars'];
-              setCommunities(updatedCommunities);
+              fetch('/api/communities', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(community)
+              })
+              .then(async (response) => {
+                const data = await response.json();
+                console.log(data.createdRegist);
+                const community = data.createdRegist;
+                const updatedCommunities = [...communities, community];
+                setCommunities(updatedCommunities);
+              })
+
+
             }}>
               <div>
                 <input
@@ -127,8 +162,8 @@ export default function Home() {
               {communities.map((actualItem) => {
                 return (
                   <li key={actualItem.id}>
-                    <a href={`/users/${actualItem.title}`}>
-                      <img src={actualItem.image} />
+                    <a href={`/communities/${actualItem.id}`}>
+                      <img src={actualItem.imageUrl} />
                       <span>{actualItem.title}</span>
                     </a>
                   </li>
