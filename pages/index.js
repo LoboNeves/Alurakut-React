@@ -3,6 +3,8 @@ import MainGrid from '../src/components/MainGrid'
 import Box from '../src/components/Box'
 import { AlurakutMenu, AlurakutProfileSidebarMenuDefault, OrkutNostalgicIconSet } from '../src/lib/AlurakutCommons'
 import { ProfileRelationsBoxWrapper } from '../src/components/ProfileRelations';
+import nookies from 'nookies';
+import jwt from 'jsonwebtoken'
 
 function ProfileSideBar(props) {
   return (
@@ -44,8 +46,8 @@ function ProfileRelationsBox(props) {
   )
 }
 
-export default function Home() {
-  const RandomUser = 'LoboNeves';
+export default function Home(props) {
+  const RandomUser = props.githubUser;
   const [communities, setCommunities] = React.useState([]);
   const favorites = ['jardeson777', 'luucasfreitas', 'matheusromaneli']
 
@@ -193,4 +195,33 @@ export default function Home() {
       </MainGrid>
     </>
   )
+}
+
+export async function getServerSideProps(context) {
+  const cookies = nookies.get(context);
+  const token = cookies.USER_TOKEN;
+
+  const { isAuthenticated } = await fetch('https://alurakut.vercel.app/api/auth', {
+    headers: {
+        Authorization: token
+      }
+  })
+  .then((resposta) => resposta.json())
+
+  if(!isAuthenticated) {
+    return {
+      redirect: {
+        destination: '/login',
+        permanent: false,
+      }
+    }
+  }
+
+  const { githubUser } = jwt.decode(token)
+
+  return {
+    props: {
+      githubUser
+    }, // will be passed to the page component as props
+  }
 }
